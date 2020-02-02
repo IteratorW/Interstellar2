@@ -62,14 +62,18 @@ local function iIntInput(x, y, width, height, backgroundColor, textColor, placeh
 	local input = iInput(x, y, width, height, backgroundColor, textColor, placeholderTextColor, backgroundFocusedColor, textFocusedColor, text, placeholderText, eraseTextOnFocus, textMask)
 
 	input.validator = function(inputText)
-		return tonumber(inputText) ~= nil
+		if tonumber(inputText) == nil then
+			return false
+		end
+
+		return true
 	end
 
 	return input
 end
 
 local function iRangedIntInput(x, y, width, height, backgroundColor, textColor, placeholderTextColor, backgroundFocusedColor, textFocusedColor, text, placeholderText, min, max)
-	local input = iInput(x, y, width, height, backgroundColor, textColor, placeholderTextColor, backgroundFocusedColor, textFocusedColor, text, placeholderText, false, nil)
+	local input = iIntInput(x, y, width, height, backgroundColor, textColor, placeholderTextColor, backgroundFocusedColor, textFocusedColor, text, placeholderText, false, nil)
 
 	input.onValidInputFinished = function(num)
 
@@ -77,8 +81,6 @@ local function iRangedIntInput(x, y, width, height, backgroundColor, textColor, 
 
 	input.onInputFinished = function(_, input)
 		num = tonumber(input.text)
-
-		if num == nil then return end
 
 		if num < min then num = min elseif num > max then num = max end
 
