@@ -195,9 +195,9 @@ windows.firstLaunchWindow = function(x, y)
 	local window = iTitledWindow(x, y, 62, 6, "Welcome to Interstellar2")
 	window.name = "Interstellar2"
 
-	window:addChild(GUI.text(2, 2, 0x000000, "You are launching Interstellar2 first time."))
-	window:addChild(GUI.text(2, 3, 0x000000, "Be sure to check out settings to configure IS2 or your ship."))
-	window:addChild(GUI.text(2, 4, 0x000000, "Good luck, have fun!"))
+	window:addChild(GUI.text(2, 2, colors.textColor, "You are launching Interstellar2 first time."))
+	window:addChild(GUI.text(2, 3, colors.textColor, "Be sure to check out settings to configure IS2 or your ship."))
+	window:addChild(GUI.text(2, 4, colors.textColor, "Good luck, have fun!"))
 
 	window:addChild(GUI.button(window.width-6, window.height-1, 6, 1, colors.button, colors.buttonText, colors.buttonPressed, colors.buttonTextPressed, "OK")).onTouch = function()
 		window:remove()
@@ -239,6 +239,7 @@ end
 
 windows.apps.jumpWindow = {
 	name = "Jump Menu",
+	currentWindow = nil,
 
 	check = function()
 		if not wrapper.shipApiAvailable() then
@@ -247,6 +248,17 @@ windows.apps.jumpWindow = {
 		end
 
 		return true
+	end,
+
+	update = function()
+		if windows.apps.jumpWindow.currentWindow then
+			x = windows.apps.jumpWindow.currentWindow.x
+			y = windows.apps.jumpWindow.currentWindow.y
+
+			windows.apps.jumpWindow.currentWindow:remove()
+
+			app:addChild(windows.apps.jumpWindow.getWindow(x, y))
+		end
 	end,
 
 	getWindow = function(x, y)
@@ -264,7 +276,7 @@ windows.apps.jumpWindow = {
 	    local jumpX, jumpY, jumpZ = wrapper.ship.getMovement()
 	    local rot = 0
 
-	    window:addChild(GUI.label(2, 3, 8, 1, 0x555555, "Entered values will be automatically limited."))
+	    window:addChild(GUI.label(2, 3, 8, 1, colors.textColor, "Entered values will be automatically limited."))
 	    window:addChild(GUI.label(2, 5, 16, 1, colors.textColor, string.format("X (%s - %s)", pX + nX, maxX)))
 	    window:addChild(iRangedIntInput(2, 6, 30, 1, colors.inputBackground, colors.inputText, colors.inputPlaceholderText, colors.inputBackgroundFocused, colors.inputTextFocused, jumpX, "X", -maxX, maxX)).onValidInputFinished = function(num)
 	    	junpX = num
@@ -281,7 +293,7 @@ windows.apps.jumpWindow = {
 	    end    
 
 	    window:addChild(GUI.label(2, 14, 14, 1, colors.textColor, 'Clockwise rotation (90° step)'))
-	    window:addChild(iIntInput(2, 15, 30, 1, colors.inputBackground, colors.inputText, colors.inputPlaceholderText, colors.inputBackgroundFocused, colors.inputTextFocused, "0", "R", -270, 270)).onValidInputFinished = function(num)
+	    window:addChild(iRangedIntInput(2, 15, 30, 1, colors.inputBackground, colors.inputText, colors.inputPlaceholderText, colors.inputBackgroundFocused, colors.inputTextFocused, rot, "R", -270, 270)).onValidInputFinished = function(num)
 	    	rot = num
 	    end
 
@@ -292,6 +304,81 @@ windows.apps.jumpWindow = {
 	    window:addChild(GUI.button(33, 17, 29, 3, colors.button, colors.buttonText, colors.buttonPressed, colors.buttonTextPressed, "Hyperspace jump")).onTouch = function()
 	    	wrapper.ship.jump(nil, nil, nil, nil, true)
 	    end
+
+		window:addChild(GUI.button(window.width - 9, 3, 9, 1, colors.button, colors.buttonText, colors.buttonPressed, colors.buttonTextPressed, "Refresh")).onTouch = function()
+	    	windows.apps.jumpWindow.update()
+	    end
+
+    	currentWindow = window
+
+	    return window
+	end
+}
+
+windows.apps.shipInfoWindow = {
+	name = "Ship Info",
+	currentWindow = nil,
+
+	check = function()
+		if not wrapper.shipApiAvailable() then
+			GUI.alert("Ship is not available.")
+			return false
+		end
+
+		return true
+	end,
+
+	update = function()
+		if windows.apps.shipInfoWindow.currentWindow then
+			x = windows.apps.shipInfoWindow.currentWindow.x
+			y = windows.apps.shipInfoWindow.currentWindow.y
+
+			windows.apps.shipInfoWindow.currentWindow:remove()
+
+			app:addChild(windows.apps.shipInfoWindow.getWindow(x, y))
+		end
+	end,
+
+	getWindow = function(x, y)
+		local window = iTitledWindow(x, y, 57, 13, "Ship Info")
+
+		local x, y, z = wrapper.ship.getPosition()
+
+		window:addChild(GUI.label(2, 3, 8, 1, colors.textColor, "Coordinates:"))
+		window:addChild(GUI.label(2, 4, 8, 1, colors.textColor, x))
+		window:addChild(GUI.label(2, 5, 8, 1, colors.textColor, y))
+		window:addChild(GUI.label(2, 6, 8, 1, colors.textColor, z))
+
+		local dim = wrapper.ship.getDimensionType()
+		if dim == 0 then dim = "Space" elseif dim == 1 then dim = "Hyperspace" else dim = "Unknown" end
+
+		window:addChild(GUI.label(2, 8, 8, 1, colors.textColor, "Dimension:"))
+		window:addChild(GUI.label(2, 9, 8, 1, colors.textColor, dim))
+
+		local oX, oZ = wrapper.ship.getOrientation()
+
+		window:addChild(GUI.label(2, 11, 8, 1, colors.textColor, "Orientation:"))
+		window:addChild(GUI.label(2, 12, 8, 1, colors.textColor, string.format("X: %s, Z: %s", oX, oZ)))
+
+		window:addChild(GUI.label(17, 3, 8, 1, colors.textColor, string.format("Name: %s", wrapper.ship.getShipName())))
+		window:addChild(GUI.label(17, 5, 8, 1, colors.textColor, string.format("Mass: %s", wrapper.ship.getShipMass())))
+
+		local assembly
+		if wrapper.ship.isAssemblyValid() then assembly = "Valid" else assembly = "Invalid" end
+
+		window:addChild(GUI.label(17, 7, 8, 1, colors.textColor, string.format("Assembly: %s", assembly)))
+
+		local shipEnergy = wrapper.ship.getShipEnergy()
+		local maxEnergy = wrapper.ship.getMaxShipEnergy()
+		local energyPercents = (shipEnergy / maxEnergy) * 100
+
+		window:addChild(GUI.progressBar(17, 9, 40, colors.mainColor, colors.button, colors.textColor, energyPercents, true, true, "Ship energy: ", "%"))
+
+		window:addChild(GUI.button(window.width - 9, window.height - 1, 9, 1, colors.button, colors.buttonText, colors.buttonPressed, colors.buttonTextPressed, "Refresh")).onTouch = function()
+	    	windows.apps.shipInfoWindow.update()
+	    end
+
+	    currentWindow = window
 
 	    return window
 	end
@@ -311,13 +398,11 @@ local res = {}
 res[1], res[2] = gpu.getResolution()
 
 if (res[1] < 100) and (res[2] < 40) then
-	gpu.setResolution(80, 25)
+	gpu.setResolution(160, 50)
 end
 buffer.setResolution(res[1], res[2])
 
 app:addChild(GUI.panel(1, 1, app.width, app.height, colors.desktopBackground))
-
-windows.iDebug = app:addChild(GUI.textBox(app.width-33, 2, 32, 16, colors.button, 0xFFFFFF, {"Debug info:"}, 1, 1, 0))
 
 if config.firstLaunchWindow then
 	app:addChild(windows.firstLaunchWindow(5, 5))

@@ -128,4 +128,68 @@ wrapper.ship.jump = function(rotationSteps, x, y, z, hyper) -- Make the ship jum
 	end
 end
 
+wrapper.ship.getPosition = function() -- Returns X Y Z of the ship
+	if wrapper.demoMode then
+		return 1337, 228, 1488
+	end
+
+	local x, y, z = wrapper.ship.getComponent().position()
+
+	return x, y, z
+end
+
+wrapper.ship.getOrientation = function() -- Returns X Z ship rotation
+	if wrapper.demoMode then
+		return 0, 1
+	end
+
+	local x, _, z = wrapper.ship.getComponent().getOrientation()
+
+	return x, z
+end
+
+wrapper.ship.getShipName = function() -- Gets ship name
+	if wrapper.demoMode then
+		return "Demo"
+	end
+
+	return wrapper.ship.getComponent().shipName()
+end
+
+wrapper.ship.getShipMass = function() -- Gets ship mass in blocks
+	if wrapper.demoMode then
+		return 1500
+	end
+
+	return wrapper.ship.getComponent().getShipSize()
+end
+
+wrapper.ship.isAssemblyValid = function() -- Is ship assembly valid or not
+	if wrapper.demoMode then
+		return true
+	end
+
+	return wrapper.ship.getComponent().isAssemblyValid()
+end
+
+wrapper.ship.getShipEnergy = function() -- Gets ship energy
+	if wrapper.demoMode then
+		return 5
+	end
+
+	local energy = wrapper.ship.getComponent.energy()
+
+	return energy
+end
+
+wrapper.ship.getMaxShipEnergy = function() -- Gets max ship energy
+	if wrapper.demoMode then
+		return 10
+	end
+
+	local _, max = wrapper.ship.getComponent.energy()
+
+	return max
+end
+
 return wrapper
