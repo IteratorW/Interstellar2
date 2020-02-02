@@ -177,7 +177,7 @@ wrapper.ship.getShipEnergy = function() -- Gets ship energy
 		return 5
 	end
 
-	local energy = wrapper.ship.getComponent.energy()
+	local energy = wrapper.ship.getComponent().energy()
 
 	return energy
 end
@@ -187,7 +187,7 @@ wrapper.ship.getMaxShipEnergy = function() -- Gets max ship energy
 		return 10
 	end
 
-	local _, max = wrapper.ship.getComponent.energy()
+	local _, max = wrapper.ship.getComponent().energy()
 
 	return max
 end
