@@ -75,7 +75,9 @@ wrapper.ship.getMaxJumpDistance = function() -- Gets maximum jump distance. Actu
 		return 250
 	end
 
-	return wrapper.ship.getComponent().getMaxJumpDistance()
+	_, max = wrapper.ship.getComponent().getMaxJumpDistance()
+
+	return max
 end
 
 wrapper.ship.getMovement = function() -- Gets last jump move coordinates.
