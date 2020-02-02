@@ -12,7 +12,7 @@ local internet = component.internet
 local files = {}
 print("Идет загрузка списка файлов..")
 fs.makeDirectory("/Interstellar/")
-require("shell").execute("wget https://raw.githubusercontent.com/IteratorW/Interstellar2/master/filelist.txt -fq")
+require("shell").execute("wget https://raw.githubusercontent.com/IteratorW/Interstellar2/master/filelist.txt /Interstellar/filelist.txt -fq")
 local file = io.open("/Interstellar/filelist.txt", "r")
 files = require("serialization").unserialize(file:read("*a"))
 file:close()
