@@ -78,6 +78,8 @@ local function iRangedIntInput(x, y, width, height, backgroundColor, textColor, 
 	input.onInputFinished = function(_, input)
 		num = tonumber(input.text)
 
+		if num == nil then return end
+
 		if num < min then num = min elseif num > max then num = max end
 
 		input.text = tostring(num)
@@ -282,16 +284,19 @@ windows.apps.jumpWindow = {
 	    window:addChild(GUI.label(2, 5, 16, 1, colors.textColor, string.format("X (%s - %s)", pX + nX, maxX)))
 	    window:addChild(iRangedIntInput(2, 6, 30, 1, colors.inputBackground, colors.inputText, colors.inputPlaceholderText, colors.inputBackgroundFocused, colors.inputTextFocused, jumpX, "X", -maxX, maxX)).onValidInputFinished = function(num)
 	    	junpX = num
+   			wrapper.ship.setMovement(jumpX, jumpY, jumpZ)
 	    end    
 
 	    window:addChild(GUI.label(2, 8, 12, 1, colors.textColor, string.format("Y (%s - %s)", pY + nY, maxY)))
 	    window:addChild(iRangedIntInput(2, 9, 30, 1, colors.inputBackground, colors.inputText, colors.inputPlaceholderText, colors.inputBackgroundFocused, colors.inputTextFocused, jumpY, "Y", -maxY, maxY)).onValidInputFinished = function(num)
 	    	jumpY = num
+	    	wrapper.ship.setMovement(jumpX, jumpY, jumpZ)
 	    end    
 
 	    window:addChild(GUI.label(2, 11, 14, 1, colors.textColor, string.format("Z (%s - %s)", pZ + nZ, maxZ)))
 	    window:addChild(iRangedIntInput(2, 12, 30, 1, colors.inputBackground, colors.inputText, colors.inputPlaceholderText, colors.inputBackgroundFocused, colors.inputTextFocused, jumpZ, "Z", -maxZ, maxZ)).onValidInputFinished = function(num)
 	    	jumpZ = num
+	   		wrapper.ship.setMovement(jumpX, jumpY, jumpZ)
 	    end    
 
 	    window:addChild(GUI.label(2, 14, 14, 1, colors.textColor, 'Clockwise rotation (90° step)'))
