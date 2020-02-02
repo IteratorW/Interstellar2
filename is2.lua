@@ -82,6 +82,7 @@ local function iRangedIntInput(x, y, width, height, backgroundColor, textColor, 
 	input.onInputFinished = function(_, input)
 		num = tonumber(input.text)
 
+		if num < min then num = min elseif num > max then num = max end
 
 		input.text = tostring(num)
 
