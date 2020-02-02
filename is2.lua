@@ -309,7 +309,7 @@ windows.apps.jumpWindow = {
 	    	windows.apps.jumpWindow.update()
 	    end
 
-    	currentWindow = window
+    	windows.apps.jumpWindow.currentWindow = window
 
 	    return window
 	end
@@ -375,10 +375,11 @@ windows.apps.shipInfoWindow = {
 		window:addChild(GUI.progressBar(17, 9, 40, colors.mainColor, colors.button, colors.textColor, energyPercents, true, true, "Ship energy: ", "%"))
 
 		window:addChild(GUI.button(window.width - 9, window.height - 1, 9, 1, colors.button, colors.buttonText, colors.buttonPressed, colors.buttonTextPressed, "Refresh")).onTouch = function()
+	    	test = test + 1
 	    	windows.apps.shipInfoWindow.update()
 	    end
 
-	    currentWindow = window
+	    windows.apps.shipInfoWindow.currentWindow = window
 
 	    return window
 	end
