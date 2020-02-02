@@ -25,7 +25,7 @@ wrapper.ship.getDimensionType = function() -- 0 - Space, 1 - Hyperspace, 2 - Unk
 		return 0
 	end
 
-	if wrapper.ship.getComponent().isInSpace() then return 0 elseif ship.getComponent.isInHyperspace() then return 1 else return 2 end
+	if wrapper.ship.getComponent().isInSpace() then return 0 elseif wrapper.ship.getComponent.isInHyperspace() then return 1 else return 2 end
 end
 
 wrapper.ship.setCommand = function(command) -- Sets ship command mode. 
