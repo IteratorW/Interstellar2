@@ -1,7 +1,7 @@
 # Interstellar2
 Interstellar 2 is something like Desktop Environment created to control WarpDrive ships and other components with comfort.\n
 
-[alt text](https://raw.githubusercontent.com/IteratorW/Interstellar2/master/Pictures/preview.png)
+![alt text](https://raw.githubusercontent.com/IteratorW/Interstellar2/master/Pictures/preview.png)
 
 ## Features
 ### Available
