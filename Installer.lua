@@ -11,9 +11,9 @@ local internet = component.internet
 -- Specify required files for downloading
 local files = {}
 print("Идет загрузка списка файлов..")
-fs.makeDirectory("/Interstellar/")
-require("shell").execute("wget https://raw.githubusercontent.com/IteratorW/Interstellar2/master/filelist.txt /Interstellar/filelist.txt -fq")
-local file = io.open("/Interstellar/filelist.txt", "r")
+fs.makeDirectory("/Interstellar2/")
+require("shell").execute("wget https://raw.githubusercontent.com/IteratorW/Interstellar2/master/filelist.txt /Interstellar2/filelist.txt -fq")
+local file = io.open("/Interstellar2/filelist.txt", "r")
 files = require("serialization").unserialize(file:read("*a"))
 file:close()
 
@@ -34,7 +34,7 @@ local properties = {
 		-- Specify title of your installer
 		title = "Установщик Interstellar 2",
 		-- Use <currentProgress>, <totalProgress> and <currentFile> text insertions to automatically display their values
-		currentFile = "Качаю \"<currentFile>\"",
+		currentFile = "Скачивается \"<currentFile>\"",
 		totalProgress = "Общий прогресс: <totalProgress>%",
 		-- Comment this lines to automatically close installer window
 		finished1 = "Interstellar 2 был успешно установлен!",
