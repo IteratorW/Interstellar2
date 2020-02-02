@@ -342,6 +342,8 @@ windows.apps.shipInfoWindow = {
 	getWindow = function(x, y)
 		local window = iTitledWindow(x, y, 57, 13, "Ship Info")
 
+		wrapper.ship.setCommand("MANUAL")
+
 		local x, y, z = wrapper.ship.getPosition()
 
 		window:addChild(GUI.label(2, 3, 8, 1, colors.textColor, "Coordinates:"))
@@ -375,7 +377,6 @@ windows.apps.shipInfoWindow = {
 		window:addChild(GUI.progressBar(17, 9, 40, colors.mainColor, colors.button, colors.textColor, energyPercents, true, true, "Ship energy: ", "%"))
 
 		window:addChild(GUI.button(window.width - 9, window.height - 1, 9, 1, colors.button, colors.buttonText, colors.buttonPressed, colors.buttonTextPressed, "Refresh")).onTouch = function()
-	    	test = test + 1
 	    	windows.apps.shipInfoWindow.update()
 	    end
 
