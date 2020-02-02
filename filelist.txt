@@ -23,4 +23,12 @@
       url = "https://raw.githubusercontent.com/IgorTimofeev/GUI/master/GUI.lua",
       path = "/lib/GUI.lua"
   },
+  {
+      url = "https://raw.githubusercontent.com/IteratorW/Interstellar2/master/is2.lua",
+      path = "/is2.lua"
+  },
+  {
+      url = "https://raw.githubusercontent.com/IteratorW/Interstellar2/master/is2wrapper.lua",
+      path = "/is2wrapper.lua"
+  },
 }
