@@ -62,7 +62,7 @@ local function iIntInput(x, y, width, height, backgroundColor, textColor, placeh
 	local input = iInput(x, y, width, height, backgroundColor, textColor, placeholderTextColor, backgroundFocusedColor, textFocusedColor, text, placeholderText, eraseTextOnFocus, textMask)
 
 	input.validator = function(inputText)
-		return tonumber(inputText)
+		return tonumber(inputText) ~= nil
 	end
 
 	return input
@@ -264,6 +264,8 @@ windows.apps.jumpWindow = {
 	getWindow = function(x, y)
 		local window = iTitledWindow(x, y, 62, 20, "Jump Window")
 
+		wrapper.ship.setCommand("MANUAL")
+
 		local max = wrapper.ship.getMaxJumpDistance()
 		local pX, pY, pZ = wrapper.ship.getDimPositive()
 	    local nX, nY, nZ = wrapper.ship.getDimNegative()
@@ -341,8 +343,6 @@ windows.apps.shipInfoWindow = {
 
 	getWindow = function(x, y)
 		local window = iTitledWindow(x, y, 57, 13, "Ship Info")
-
-		wrapper.ship.setCommand("MANUAL")
 
 		local x, y, z = wrapper.ship.getPosition()
 
