@@ -465,12 +465,6 @@ windows.apps.radarWindow = {
 	    	wrapper.radar.scan(radarRadius)
 	    end
 
-	    window.eventHandler = function(application, object, ...eventData)
-	    	if eventData[1] == "is2wrapperRadarScan" then
-	    		
-    		end
-		end
-
 	    windows.apps.radarWindow.currentWindow = window
 
 	    return window
