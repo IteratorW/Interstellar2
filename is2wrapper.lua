@@ -7,9 +7,14 @@ local wrapper = {}
 
 wrapper.demoMode = false -- In demo mode, there are no actual components used. Made for easier main program writing.
 wrapper.ship = {}
+wrapper.radar = {}
 
 wrapper.shipApiAvailable = function()
 	return component.isAvailable("warpdriveShipController") or wrapper.demoMode
+end
+
+wrapper.radarApiAvailable = function()
+	return component.isAvailable("warpdriveRadar") or wrapper.demoMode
 end
 
 wrapper.toggleDemoMode = function()
@@ -18,6 +23,30 @@ end
 
 wrapper.ship.getComponent = function()
 	return component.warpdriveShipController
+end
+
+wrapper.radar.getComponent = function()
+	return component.warpdriveRadar
+end
+
+wrapper.radar.scan = function(radius) -- Make a scan with specified radius. Returns the result
+
+end
+
+wrapper.radar.getMaxRadarEnergy = function() -- Gets maximum radar energy (practically energy required for a 9999 radius scan)
+	if wrapper.demoMode then
+		return 10
+	end
+
+	return wrapper.radar.getComponent().getEnergyRequired(9000)
+end
+
+wrapper.radar.getRadarEnergy = function() -- Gets current radar energy
+	if wrapper.demoMode then
+		return 5
+	end
+
+	return wrapper.radar.getComponent().energy()
 end
 
 wrapper.ship.getDimensionType = function() -- 0 - Space, 1 - Hyperspace, 2 - Unknown (since WarpDrive API returns "?" every time you're tryin' to get a dimension, so no way to know it)

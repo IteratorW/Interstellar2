@@ -302,8 +302,8 @@ windows.apps.jumpWindow = {
 	   		wrapper.ship.setMovement(jumpX, jumpY, jumpZ)
 	    end    
 
-	    window:addChild(GUI.label(2, 14, 14, 1, colors.textColor, 'Clockwise rotation (90° step)'))
-	    window:addChild(iRangedIntInput(2, 15, 30, 1, colors.inputBackground, colors.inputText, colors.inputPlaceholderText, colors.inputBackgroundFocused, colors.inputTextFocused, rot, "R", -270, 270)).onValidInputFinished = function(num)
+	    window:addChild(GUI.label(2, 14, 14, 1, colors.textColor, 'Clockwise rotation steps (each is 90°)'))
+	    window:addChild(iRangedIntInput(2, 15, 30, 1, colors.inputBackground, colors.inputText, colors.inputPlaceholderText, colors.inputBackgroundFocused, colors.inputTextFocused, rot, "R", 1, 4)).onValidInputFinished = function(num)
 	    	rot = num
 	    end
 
@@ -380,7 +380,7 @@ windows.apps.shipInfoWindow = {
 
 		local shipEnergy = wrapper.ship.getShipEnergy()
 		local maxEnergy = wrapper.ship.getMaxShipEnergy()
-		local energyPercents = (shipEnergy / maxEnergy) * 100
+		local energyPercents = math.floor((shipEnergy / maxEnergy) * 100)
 
 		window:addChild(GUI.progressBar(17, 9, 40, colors.mainColor, colors.button, colors.textColor, energyPercents, true, true, "Ship energy: ", "%"))
 
@@ -389,6 +389,59 @@ windows.apps.shipInfoWindow = {
 	    end
 
 	    windows.apps.shipInfoWindow.currentWindow = window
+
+	    return window
+	end
+}
+
+windows.apps.radarWindow = {
+	name = "WarpRadar",
+	currentWindow = nil,
+
+	check = function()
+		if not wrapper.radarApiAvailable() then
+			GUI.alert("Radar is not available.")
+			return false
+		end
+
+		return true
+	end,
+
+	update = function()
+		if windows.apps.radarWindow.currentWindow then
+			x = windows.apps.radarWindow.currentWindow.x
+			y = windows.apps.radarWindow.currentWindow.y
+
+			windows.apps.radarWindow.currentWindow:remove()
+
+			app:addChild(windows.apps.radarWindow.getWindow(x, y))
+		end
+	end,
+
+	getWindow = function(x, y)
+		local window = iTitledWindow(x, y, 57, 40, "WarpRadar")
+
+		local energyPercents = math.floor((wrapper.radar.getRadarEnergy() / wrapper.radar.getMaxRadarEnergy()) * 100)
+
+		window:addChild(GUI.button(window.width - 10, 3, 9, 1, colors.button, colors.buttonText, colors.buttonPressed, colors.buttonTextPressed, "Refresh")).onTouch = function()
+	    	windows.apps.shipInfoWindow.update()
+	    end
+
+		window:addChild(GUI.progressBar(2, 3, 40, colors.mainColor, colors.button, colors.textColor, energyPercents, true, true, "Radar energy: ", "%"))
+
+	    local slider = window:addChild(GUI.slider(4, 6, 40, colors.mainColor, colors.button, colors.buttonPressed, colors.textColor, 1, 9999, 1, true, "Radar radius: ", " blocks"))
+
+		slider.roundValues = true
+		slider.onValueChanged = function()
+
+		end
+
+		window:addChild(GUI.label(2, 9, 8, 1, colors.textColor, "Limit radius to current energy:"))
+		window:addChild(GUI.switch(2, 11, 8, colors.mainColor, colors.button, colors.buttonPressed, false)).onStateChanged = function()
+
+		end
+
+	    windows.apps.radarWindow.currentWindow = window
 
 	    return window
 	end
