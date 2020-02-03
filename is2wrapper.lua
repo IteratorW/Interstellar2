@@ -2,6 +2,8 @@
 -- Many fucntion names are equal to the original ones, so you can find more info about them here:
 -- https://github.com/LemADEC/WarpDrive/wiki/LUA-properties-for-Movement
 local component = require("component")
+local event = require("event")
+local computer = require("computer")
 
 local wrapper = {}
 
@@ -29,24 +31,39 @@ wrapper.radar.getComponent = function()
 	return component.warpdriveRadar
 end
 
-wrapper.radar.scan = function(radius) -- Make a scan with specified radius. Returns the result
+wrapper.radar.scan = function(radius) -- Make a scan with specified radius. Pushes a signal after the scan completes. 
+	if wrapper.demoMode then
+		return
+	end
 
+	wrapper.radar.getComponent().radius(radius)
+
+	local time = wrapper.radar.getComponent().getScanDuration(radius)
+	wrapper.radar.getComponent().start()
+
+	event.timer(time, function()
+		computer.pushSignal("is2wrapperRadarScan", wrapper.radar.getComponent().getResults())
+	end)
 end
 
 wrapper.radar.getMaxRadarEnergy = function() -- Gets maximum radar energy (practically energy required for a 9999 radius scan)
 	if wrapper.demoMode then
-		return 10
+		return 100000000
 	end
 
-	return wrapper.radar.getComponent().getEnergyRequired(9000)
+	local _, maxEnergy = wrapper.radar.getComponent().energy()
+
+	return maxEnergy
 end
 
 wrapper.radar.getRadarEnergy = function() -- Gets current radar energy
 	if wrapper.demoMode then
-		return 5
+		return 10000
 	end
 
-	return wrapper.radar.getComponent().energy()
+	local energy = wrapper.radar.getComponent().energy()
+
+	return energy
 end
 
 wrapper.ship.getDimensionType = function() -- 0 - Space, 1 - Hyperspace, 2 - Unknown (since WarpDrive API returns "?" every time you're tryin' to get a dimension, so no way to know it)

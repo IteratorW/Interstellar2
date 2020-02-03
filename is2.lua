@@ -421,10 +421,11 @@ windows.apps.radarWindow = {
 	getWindow = function(x, y)
 		local window = iTitledWindow(x, y, 57, 40, "WarpRadar")
 
-		local energyPercents = math.floor((wrapper.radar.getRadarEnergy() / wrapper.radar.getMaxRadarEnergy()) * 100)
+		local radarRadius = 1
 
+		local energyPercents = (wrapper.radar.getRadarEnergy() / wrapper.radar.getMaxRadarEnergy()) * 100
 		window:addChild(GUI.button(window.width - 10, 3, 9, 1, colors.button, colors.buttonText, colors.buttonPressed, colors.buttonTextPressed, "Refresh")).onTouch = function()
-	    	windows.apps.shipInfoWindow.update()
+	    	windows.apps.radarWindow.update()
 	    end
 
 		window:addChild(GUI.progressBar(2, 3, 40, colors.mainColor, colors.button, colors.textColor, energyPercents, true, true, "Radar energy: ", "%"))
@@ -433,12 +434,41 @@ windows.apps.radarWindow = {
 
 		slider.roundValues = true
 		slider.onValueChanged = function()
-
+			radarRadius = math.round(slider.value)
 		end
 
 		window:addChild(GUI.label(2, 9, 8, 1, colors.textColor, "Limit radius to current energy:"))
-		window:addChild(GUI.switch(2, 11, 8, colors.mainColor, colors.button, colors.buttonPressed, false)).onStateChanged = function()
+		switch = window:addChild(GUI.switch(35, 9, 8, colors.mainColor, colors.button, colors.buttonPressed, false))
 
+		switch.onStateChanged = function()
+			if switch.state then
+				local newMaximum = 100 * (wrapper.radar.getRadarEnergy() ^ (1/3))
+
+				slider.maximumValue = newMaximum
+				
+				local newSliderValue = slider.value
+				if newSliderValue > newMaximum then newSliderValue = newMaximum end
+				slider.value = newSliderValue
+
+				slider.onValueChanged()
+			else
+				slider.maximumValue = 9999
+
+				slider.onValueChanged()
+			end
+		end
+
+		local textBox = window:addChild(GUI.textBox(2, 11, 55, 29, colors.button, colors.textColor, {}, 1, 1, 0))
+		textBox.scrollBarEnabled = true
+
+		window:addChild(GUI.button(window.width - 7, 9, 6, 1, colors.button, colors.buttonText, colors.buttonPressed, colors.buttonTextPressed, "Scan")).onTouch = function()
+	    	wrapper.radar.scan(radarRadius)
+	    end
+
+	    window.eventHandler = function(application, object, ...eventData)
+	    	if eventData[1] == "is2wrapperRadarScan" then
+	    		
+    		end
 		end
 
 	    windows.apps.radarWindow.currentWindow = window
