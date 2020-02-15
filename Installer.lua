@@ -43,8 +43,8 @@ local properties = {
 	-- Customize color scheme as you want to
 	colors = {
 		window = {
-			background = 0xC3C7CB,
-			text = 0xFFFFFF,
+			background = 0xFFFFFF,
+			text = 0x000000,
 			shadow = 0x3C3C3C
 		},
 		title = {
@@ -53,7 +53,7 @@ local properties = {
 		},
 		progressBar = {
 			active = 0x0000AA,
-			passive = 0xCCCCCC
+			passive = 0xC0C0C0
 		}
 	}
 }

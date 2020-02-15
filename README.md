@@ -5,6 +5,7 @@ Interstellar 2 is something like Desktop Environment created to control WarpDriv
 
 ## Installing
 `pastebin run 1bVb0fvh`
+
 Please note that you need OpenOS and full level 3 computer for this program.
 
 ## Features
@@ -20,8 +21,6 @@ Please note that you need OpenOS and full level 3 computer for this program.
 ## MO Transporter Notes
 Matter Overdrive Transporter support might be buggy at times. Entered coordinates are not being displayed in the transporter since its api is a buggy mess.
 
-
 To connect a transporter to your computer, you need to use an adapter.
-
 
 Before setting the points in IS2, remove all points from the transporter and create only one. Don't change it. After that you can start using it in the program.

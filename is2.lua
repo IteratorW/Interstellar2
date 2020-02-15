@@ -449,7 +449,7 @@ windows.apps.radarWindow = {
 
 		switch.onStateChanged = function()
 			if switch.state then
-				local newMaximum = 10 * (10*wrapper.radar.getRadarEnergy()^(1/3))
+				local newMaximum = 10 * (10*wrapper.radar.getRadarEnergy())^(1/3)
 
 				slider.maximumValue = newMaximum
 				
