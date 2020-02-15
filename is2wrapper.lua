@@ -9,8 +9,9 @@ local table = require("table")
 local wrapper = {}
 
 wrapper.demoMode = false -- In demo mode, there are no actual components used. Made for easier main program writing.
-wrapper.ship = {}
-wrapper.radar = {}
+wrapper.ship = {} -- ShipController
+wrapper.radar = {} -- Radar
+wrapper.transporter = {} -- MatterOverdirve Transporter
 
 wrapper.shipApiAvailable = function()
 	return component.isAvailable("warpdriveShipController") or wrapper.demoMode
@@ -18,6 +19,10 @@ end
 
 wrapper.radarApiAvailable = function()
 	return component.isAvailable("warpdriveRadar") or wrapper.demoMode
+end
+
+wrapper.transporterApiAvailable = function()
+	return component.isAvailable("mo_transporter") or wrapper.demoMode
 end
 
 wrapper.toggleDemoMode = function()
@@ -30,6 +35,20 @@ end
 
 wrapper.radar.getComponent = function()
 	return component.warpdriveRadar
+end
+
+wrapper.transporter.getComponent = function()
+	return component.mo_transporter
+end
+
+wrapper.transporter.setCoordinates = function(x, y, z)
+	if wrapper.demoMode then
+		return 
+	end
+
+	wrapper.transporter.getComponent().setX(0, x)
+	wrapper.transporter.getComponent().setY(0, y)
+	wrapper.transporter.getComponent().setZ(0, z)
 end
 
 wrapper.radar.scan = function(radius) -- Make a scan with specified radius. Pushes an event with result count after the scan completes. Use getResult() to get results.

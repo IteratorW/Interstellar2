@@ -518,6 +518,62 @@ windows.apps.radarWindow = {
 	end
 }
 
+windows.apps.transporterWindow = {
+	name = "Transporter",
+	currentWindow = nil,
+
+	check = function()
+		if not wrapper.transporterApiAvailable() then
+			GUI.alert("Transporter is not available.")
+			return false
+		end
+
+		return true
+	end,
+
+	update = function()
+		if windows.apps.transporterWindow.currentWindow then
+			x = windows.apps.transporterWindow.currentWindow.x
+			y = windows.apps.transporterWindow.currentWindow.y
+
+			windows.apps.transporterWindow.currentWindow:remove()
+
+			app:addChild(windows.apps.transporterWindow.getWindow(x, y))
+		end
+	end,
+
+	getWindow = function(x, y)
+		local window = iTitledWindow(x, y, 20, 12, "MO Transporter")
+
+		local x = 0
+		local y = 0
+		local z = 0
+
+		window:addChild(GUI.label(2, 3, 8, 1, colors.textColor, "Enter coordinates:"))
+
+		window:addChild(GUI.label(2, 5, 2, 1, colors.textColor, "X:"))
+		window:addChild(iIntInput(5, 5, 10, 1, colors.inputBackground, colors.inputText, colors.inputPlaceholderText, colors.inputBackgroundFocused, colors.inputTextFocused, "", "X", false)).onInputFinished = function(_, input)
+			x = tonumber(input.text)
+		end
+
+		window:addChild(GUI.label(2, 7, 2, 1, colors.textColor, "Y:"))
+		window:addChild(iIntInput(5, 7, 10, 1, colors.inputBackground, colors.inputText, colors.inputPlaceholderText, colors.inputBackgroundFocused, colors.inputTextFocused, "", "Y", false)).onInputFinished = function(_, input)
+			y = tonumber(input.text)
+		end
+
+		window:addChild(GUI.label(2, 9, 2, 1, colors.textColor, "Z:"))
+		window:addChild(iIntInput(5, 9, 10, 1, colors.inputBackground, colors.inputText, colors.inputPlaceholderText, colors.inputBackgroundFocused, colors.inputTextFocused, "", "Z", false)).onInputFinished = function(_, input)
+			z = tonumber(input.text)
+		end
+
+		window:addChild(GUI.button(window.width - 5, 11, 5, 1, colors.button, colors.buttonText, colors.buttonPressed, colors.buttonTextPressed, "Set")).onTouch = function()
+			wrapper.transporter.setCoordinates(x, y, z)
+	    end
+
+	    return window
+	end
+}
+
 ------------------------------------------------------------------------
 local maxRes = {}
 maxRes[1], maxRes[2] = gpu.maxResolution()
