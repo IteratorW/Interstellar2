@@ -11,8 +11,8 @@ To install it, simply run `pasebin run 1bVb0fvh`
 ## Features
 - [x] Ship info window
 - [x] Ship jump window
-- [ ] WarpDrive Radar control
-- [ ] Ship move loggin using custom protocols
+- [x] WarpDrive Radar control
+- [ ] Ship move logging using custom protocols
 - [ ] Full ship settings window
 - [ ] Other ship features such as crew management
 - [ ] Other WarpDrive components support, such as cloaking device, lasers, etc.

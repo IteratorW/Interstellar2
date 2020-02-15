@@ -1,9 +1,10 @@
--- Interstellar 2 WarpDrive wrapper.
+	-- Interstellar 2 WarpDrive wrapper.
 -- Many fucntion names are equal to the original ones, so you can find more info about them here:
 -- https://github.com/LemADEC/WarpDrive/wiki/LUA-properties-for-Movement
 local component = require("component")
 local event = require("event")
 local computer = require("computer")
+local table = require("table")
 
 local wrapper = {}
 
@@ -31,19 +32,32 @@ wrapper.radar.getComponent = function()
 	return component.warpdriveRadar
 end
 
-wrapper.radar.scan = function(radius) -- Make a scan with specified radius. Pushes a signal after the scan completes. 
+wrapper.radar.scan = function(radius) -- Make a scan with specified radius. Pushes an event with result count after the scan completes. Use getResult() to get results.
 	if wrapper.demoMode then
+		event.push("is2wrapperRadarScan", -1)
 		return
 	end
 
 	wrapper.radar.getComponent().radius(radius)
-
-	local time = wrapper.radar.getComponent().getScanDuration(radius)
 	wrapper.radar.getComponent().start()
+	
+	os.sleep(wrapper.radar.getComponent().getScanDuration(radius))
 
-	event.timer(time, function()
-		computer.pushSignal("is2wrapperRadarScan", wrapper.radar.getComponent().getResults())
-	end)
+	event.push("is2wrapperRadarScan", wrapper.radar.getComponent().getResultsCount())
+end
+
+wrapper.radar.getResult = function(index)
+	if wrapper.demoMode then
+		return nil
+	end
+
+	local success, objectType, name, x, y, z, mass = wrapper.radar.getComponent().getResult(index)
+
+	if not success then
+		return nil
+	end
+
+	return objectType, name, x, y, z, mass
 end
 
 wrapper.radar.getMaxRadarEnergy = function() -- Gets maximum radar energy (practically energy required for a 9999 radius scan)
@@ -64,6 +78,14 @@ wrapper.radar.getRadarEnergy = function() -- Gets current radar energy
 	local energy = wrapper.radar.getComponent().energy()
 
 	return energy
+end
+
+wrapper.radar.getRequiredEnergy = function(radius) -- Get required energy for scan
+	if wrapper.demoMode then
+		return 20
+	end
+
+	return wrapper.radar.getComponent().getEnergyRequired(radius)
 end
 
 wrapper.ship.getDimensionType = function() -- 0 - Space, 1 - Hyperspace, 2 - Unknown (since WarpDrive API returns "?" every time you're tryin' to get a dimension, so no way to know it)

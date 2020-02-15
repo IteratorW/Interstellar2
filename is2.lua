@@ -236,6 +236,11 @@ windows.mainWindow = function(x, y)
 
 	window.actionButtons.close.onTouch = function()
 		app:stop()
+
+		comp.gpu.setBackground(0x000000)
+		comp.gpu.setForeground(0xFFFFFF)
+		require("term").clear()
+		print("Thanks for using Interstellar2!")
 	end
 	
 	return window
@@ -397,6 +402,8 @@ windows.apps.shipInfoWindow = {
 windows.apps.radarWindow = {
 	name = "WarpRadar",
 	currentWindow = nil,
+	lastTextBox = {},
+	scanInProcess = false,
 
 	check = function()
 		if not wrapper.radarApiAvailable() then
@@ -423,7 +430,7 @@ windows.apps.radarWindow = {
 
 		local radarRadius = 1
 
-		local energyPercents = (wrapper.radar.getRadarEnergy() / wrapper.radar.getMaxRadarEnergy()) * 100
+		local energyPercents = math.floor((wrapper.radar.getRadarEnergy() / wrapper.radar.getMaxRadarEnergy()) * 100 + 0.5)
 		window:addChild(GUI.button(window.width - 10, 3, 9, 1, colors.button, colors.buttonText, colors.buttonPressed, colors.buttonTextPressed, "Refresh")).onTouch = function()
 	    	windows.apps.radarWindow.update()
 	    end
@@ -442,7 +449,7 @@ windows.apps.radarWindow = {
 
 		switch.onStateChanged = function()
 			if switch.state then
-				local newMaximum = 100 * (wrapper.radar.getRadarEnergy() ^ (1/3))
+				local newMaximum = 10 * (10*wrapper.radar.getRadarEnergy()^(1/3))
 
 				slider.maximumValue = newMaximum
 				
@@ -458,12 +465,52 @@ windows.apps.radarWindow = {
 			end
 		end
 
-		local textBox = window:addChild(GUI.textBox(2, 11, 55, 29, colors.button, colors.textColor, {}, 1, 1, 0))
+		local textBox = window:addChild(GUI.textBox(2, 11, 55, 29, colors.button, colors.textColor, windows.apps.radarWindow.lastTextBox, 1, 1, 0))
 		textBox.scrollBarEnabled = true
 
 		window:addChild(GUI.button(window.width - 7, 9, 6, 1, colors.button, colors.buttonText, colors.buttonPressed, colors.buttonTextPressed, "Scan")).onTouch = function()
+			if wrapper.radar.getRadarEnergy() < wrapper.radar.getRequiredEnergy(radarRadius) then
+				GUI.alert("Not enough energy for this scan!")
+				return
+			elseif windows.apps.radarWindow.scanInProcess then
+				return
+			end
+
 	    	wrapper.radar.scan(radarRadius)
+	    	windows.apps.radarWindow.scanInProcess = true
 	    end
+
+	    local obj = app:addChild(GUI.object(0, 0, 1, 1))
+	    obj.eventHandler = function(app, obj, event, count) 
+	    	if event ~= "is2wrapperRadarScan" then
+	    		return
+	    	end
+
+	    	windows.apps.radarWindow.scanInProcess = false
+	    	textBox.lines = {}
+
+	    	if count < 1 then
+	    		table.insert(textBox.lines, {text = "Nothing was found :(", color = 0xFF0000})
+	    		app:draw()
+
+    			windows.apps.radarWindow.lastTextBox = textBox.lines
+
+	    		return
+    		end
+
+	    	for i = 0, count do
+	    		local objectType, name, x, y, z, mass = wrapper.radar.getResult(i)
+
+	    		if objectType ~= nil then
+	    			table.insert(textBox.lines, string.format("%s %s, X: %s, Y: %s, Z: %s, M: %s", objectType, name, x, y, z, mass))
+	    		end
+			end
+
+	    	textBox:scrollToStart()
+			windows.apps.radarWindow.lastTextBox = textBox.lines
+
+			app:draw()
+		end	
 
 	    windows.apps.radarWindow.currentWindow = window
 

@@ -29,6 +29,6 @@
   },
   {
       url = "https://raw.githubusercontent.com/IteratorW/Interstellar2/master/is2wrapper.lua",
-      path = "/is2wrapper.lua"
+      path = "/lib/is2wrapper.lua"
   },
 }

@@ -32,27 +32,27 @@ local properties = {
 	-- Customize localization as you want to
 	localization = {
 		-- Specify title of your installer
-		title = "Установщик Interstellar 2",
+		title = "Intestellar 2 Installer",
 		-- Use <currentProgress>, <totalProgress> and <currentFile> text insertions to automatically display their values
-		currentFile = "Скачивается \"<currentFile>\"",
-		totalProgress = "Общий прогресс: <totalProgress>%",
+		currentFile = "Downloading \"<currentFile>\"...",
+		totalProgress = "Total: <totalProgress>%",
 		-- Comment this lines to automatically close installer window
-		finished1 = "Interstellar 2 был успешно установлен!",
-		finished2 = "Нажмите любую клавишу для выхода."
+		finished1 = "Interstellar2 is successfully installed!",
+		finished2 = "Please press any key to leave and open Interstellar2."
 	},
 	-- Customize color scheme as you want to
 	colors = {
 		window = {
-			background = 0xEEEEEE,
-			text = 0x999999,
+			background = 0xC3C7CB,
+			text = 0xFFFFFF,
 			shadow = 0x3C3C3C
 		},
 		title = {
-			background = 0xCCCCCC,
-			text = 0x555555,
+			background = 0x0000AA,
+			text = 0xFFFFFF,
 		},
 		progressBar = {
-			active = 0x000082,
+			active = 0x0000AA,
 			passive = 0xCCCCCC
 		}
 	}
@@ -234,6 +234,7 @@ if properties.localization.finished1 then
 	while true do
 		local eventType = event.pull()
 		if eventType == "key_down" or eventType == "touch" then
+			os.execute("/is2.lua")
 			break
 		end
 	end
