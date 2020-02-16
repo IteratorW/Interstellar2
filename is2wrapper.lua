@@ -215,6 +215,14 @@ wrapper.ship.jump = function(rotationSteps, x, y, z, hyper) -- Make the ship jum
 	end
 end
 
+wrapper.ship.cancelJump = function() -- Cancels the jump
+	if wrapper.demoMode then
+		return
+	end
+
+	wrapper.ship.enable(false)
+end
+
 wrapper.ship.getPosition = function() -- Returns X Y Z of the ship
 	if wrapper.demoMode then
 		return 1337, 228, 1488
@@ -277,6 +285,30 @@ wrapper.ship.getMaxShipEnergy = function() -- Gets max ship energy
 	local _, max = wrapper.ship.getComponent().energy()
 
 	return max
+end
+
+wrapper.ship.setShipName = function(name) -- Sets ship name
+	if wrapper.demoMode then
+		return
+	end
+
+	wrapper.ship.getComponent().shipName(name)
+end
+
+wrapper.ship.setDimPositive = function(front, right, up) --Sets positive ship dimensions (Front, Right, Up)
+	if wrapper.demoMode then
+		return
+	end
+
+	return wrapper.ship.getComponent().dim_positive(front, right, up)
+end
+
+wrapper.ship.setDimNegative = function(back, left, down) -- Sets negative ship dimensions (Back, Left, Down)
+	if wrapper.demoMode then
+		return
+	end
+
+	return wrapper.ship.getComponent().dim_negative(back, left, down)
 end
 
 return wrapper

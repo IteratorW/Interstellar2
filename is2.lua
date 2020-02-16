@@ -10,8 +10,11 @@ local gpu = comp.gpu
 local app = GUI.application()
 local config = {
 	["firstLaunchWindow"] = true,
-	["enableAntifreeze"] = true
+	
+	["isProxyEnabled"] = false,
+	["isProxyUrl"] = ""
 }
+
 local colors = { 
 	mainColor = 0x0000AA,
 	desktopBackground = 0xC3C7CB,
@@ -29,6 +32,7 @@ local colors = {
     inputBackgroundFocused = 0xd1d1d1,
     inputTextFocused = 0x000000
 }
+
 local windows = {}
 windows.minimized = {}
 windows.minimizedButtons = {}
@@ -49,6 +53,42 @@ local function loadParams()
 
 	config = table.fromFile("/Interstellar/params.txt")
 end
+
+-- ISPROXY --
+
+local function log(body)
+	if not config["isProxyEnabled"] or config["isProxyUrl"] == "" then
+		return
+	elseif not comp.isAvailable("internet") then
+		return
+	end
+
+	local internet = comp.internet
+
+	pcall(function()
+		internet.request(config["isProxyUrl"], body)
+	end)
+end
+
+-- Да-да, решил не юзать жусон либу.
+
+local function logJump(fromX, fromY, fromZ, toX, toY, toZ, name, hyper)
+	log(string.format('{"type": "jump", "name": "%s", "jump": [%s, %s, %s, %s, %s, %s, %s]}', name, fromX, fromY, fromZ, toX, toY, toZ, hyper))
+end
+
+local function logRadar(results)
+	local out = '{"type": "radarScan", "results": ['
+
+	for i = 1, #results - 1 do
+		out = out .. string.format('"%s",', results[i])
+	end
+
+	out = out .. string.format('"%s"]}', results[#results])
+
+	log(out)
+end
+
+-------------
 
 local function iInput(x, y, width, height, backgroundColor, textColor, placeholderTextColor, backgroundFocusedColor, textFocusedColor, text, placeholderText, eraseTextOnFocus, textMask)
 	local input = GUI.input(x, y, width, height, backgroundColor, textColor, placeholderTextColor, backgroundFocusedColor, textFocusedColor, text, placeholderText, eraseTextOnFocus, textMask)
@@ -125,6 +165,43 @@ local function iTitledWindow(x, y, width, height, title)
 	return window
 end
 
+local function iTabbedWindow(...)
+	local window = iTitledWindow(...)
+
+	window.tabBar = window:addChild(GUI.tabBar(1, 2, window.width, 3, 2, 0, colors.button, colors.buttonText, colors.button, colors.buttonText, colors.buttonPressed, colors.buttonTextPressed, true))
+
+	return window
+end
+
+local function iListItemEventHandler(application, item, e1, _, x, y)
+	if e1 == "touch" or e1 == "drag" then
+		local contextMenu = GUI.addContextMenu(app, x, y)
+		contextMenu:addItem("To transporter").onTouch = function()
+			if #item.coords == 0 then
+				return
+			end
+
+			if not wrapper.transporterApiAvailable() then
+				GUI.alert("Transporter is not available.")
+			end
+
+			wrapper.transporter.setCoordinates(item.coords[1], item.coords[2], item.coords[3])
+		end
+
+		app:draw()
+	end
+end
+
+local function iListAddItem(list, text, coords)
+	local item = list:addChild(GUI.button(1, 1, 1, 1, 0, 0, 0, 0, text))
+	
+	item.switchMode = true
+	item.eventHandler = iListItemEventHandler
+	item.coords = coords
+
+	return item
+end
+
 windows.redrawWindowIcons = function()
 	for _, button in pairs(windows.minimizedButtons) do
 		button:remove()
@@ -199,7 +276,7 @@ windows.firstLaunchWindow = function(x, y)
 	local window = iTitledWindow(x, y, 62, 6, "Welcome to Interstellar2")
 	window.name = "Interstellar2"
 
-	window:addChild(GUI.text(2, 2, colors.textColor, "You are launching Interstellar2 first time."))
+	window:addChild(GUI.text(2, 2, colors.textColor, "You are launching Interstellar2 for the first time."))
 	window:addChild(GUI.text(2, 3, colors.textColor, "Be sure to check out settings to configure IS2 or your ship."))
 	window:addChild(GUI.text(2, 4, colors.textColor, "Good luck, have fun!"))
 
@@ -279,6 +356,8 @@ windows.apps.jumpWindow = {
 		local pX, pY, pZ = wrapper.ship.getDimPositive()
 	    local nX, nY, nZ = wrapper.ship.getDimNegative()
 
+	    local x, y, z = wrapper.ship.getPosition()
+
 	    local maxX = max + pX + nX
 	    local maxY = max + pY + nY
 	    local maxZ = max + pZ + nZ
@@ -286,6 +365,10 @@ windows.apps.jumpWindow = {
 	    local rotmax = 270
 	    local jumpX, jumpY, jumpZ = wrapper.ship.getMovement()
 	    local rot = 0
+
+	    if jumpX > maxX then jumpX = maxX elseif jumpX < -maxX then jumpX = -maxX end
+	    if jumpY > maxY then jumpY = maxY elseif jumpY < -maxY then jumpY = -maxY end
+	    if jumpZ > maxZ then jumpZ = maxZ elseif jumpZ < -maxZ then jumpZ = -maxZ end
 
 	    window:addChild(GUI.label(2, 3, 8, 1, colors.textColor, "Entered values will be automatically limited."))
 
@@ -314,14 +397,22 @@ windows.apps.jumpWindow = {
 
 	    window:addChild(GUI.button(2, 17, 29, 3, colors.button, colors.buttonText, colors.buttonPressed, colors.buttonTextPressed, "Jump")).onTouch = function()
 	    	wrapper.ship.jump(rot, jumpX, jumpY, jumpZ, false)
+
+	    	logJump(x, y, z, x + jumpX, y + jumpY, z + jumpZ, wrapper.ship.getShipName(), false)
 	    end
 
 	    window:addChild(GUI.button(33, 17, 29, 3, colors.button, colors.buttonText, colors.buttonPressed, colors.buttonTextPressed, "Hyperspace jump")).onTouch = function()
 	    	wrapper.ship.jump(nil, nil, nil, nil, true)
+
+	    	logJump(0, 0, 0, 0, 0 , 0, wrapper.ship.getShipName(), true)
 	    end
 
 		window:addChild(GUI.button(window.width - 9, 3, 9, 1, colors.button, colors.buttonText, colors.buttonPressed, colors.buttonTextPressed, "Refresh")).onTouch = function()
 	    	windows.apps.jumpWindow.update()
+	    end
+
+	    window:addChild(GUI.button(window.width - 13, 5, 13, 1, colors.button, colors.buttonText, colors.buttonPressed, colors.buttonTextPressed, "Cancel jump")).onTouch = function()
+	    	wrapper.ship.cancelJump()
 	    end
 
     	windows.apps.jumpWindow.currentWindow = window
@@ -465,8 +556,8 @@ windows.apps.radarWindow = {
 			end
 		end
 
-		local textBox = window:addChild(GUI.textBox(2, 11, 55, 29, colors.button, colors.textColor, windows.apps.radarWindow.lastTextBox, 1, 1, 0))
-		textBox.scrollBarEnabled = true
+		local list = window:addChild(GUI.list(2, 11, 55, 29, 0, 0, colors.button, colors.textColor, colors.buttonPressed, colors.textColor, colors.button, colors.textColor, colors.textColor, false))
+		list.children = windows.apps.radarWindow.lastTextBox
 
 		window:addChild(GUI.button(window.width - 7, 9, 6, 1, colors.button, colors.buttonText, colors.buttonPressed, colors.buttonTextPressed, "Scan")).onTouch = function()
 			if wrapper.radar.getRadarEnergy() < wrapper.radar.getRequiredEnergy(radarRadius) then
@@ -487,10 +578,10 @@ windows.apps.radarWindow = {
 	    	end
 
 	    	windows.apps.radarWindow.scanInProcess = false
-	    	textBox.lines = {}
+	    	list.children = {}
 
 	    	if count < 1 then
-	    		table.insert(textBox.lines, {text = "Nothing was found :(", color = 0xFF0000})
+	    		iListAddItem(list, "Nothing was found :(", {})
 	    		app:draw()
 
     			windows.apps.radarWindow.lastTextBox = textBox.lines
@@ -502,12 +593,19 @@ windows.apps.radarWindow = {
 	    		local objectType, name, x, y, z, mass = wrapper.radar.getResult(i)
 
 	    		if objectType ~= nil then
-	    			table.insert(textBox.lines, string.format("%s %s, X: %s, Y: %s, Z: %s, M: %s", objectType, name, x, y, z, mass))
+	    			iListAddItem(list, string.format("%s %s, X: %s, Y: %s, Z: %s, M: %s", objectType, name, x, y, z, mass), {x, y, z})
 	    		end
 			end
 
-	    	textBox:scrollToStart()
-			windows.apps.radarWindow.lastTextBox = textBox.lines
+			windows.apps.radarWindow.lastTextBox = list.children
+
+			local logOutput = {}
+
+			for _, v in pairs(list.children) do
+				table.insert(logOutput, v.text)
+			end
+
+			logRadar(logOutput)
 
 			app:draw()
 		end	
@@ -569,6 +667,127 @@ windows.apps.transporterWindow = {
 		window:addChild(GUI.button(window.width - 5, 11, 5, 1, colors.button, colors.buttonText, colors.buttonPressed, colors.buttonTextPressed, "Set")).onTouch = function()
 			wrapper.transporter.setCoordinates(x, y, z)
 	    end
+
+	    windows.apps.transporterWindow.currentWindow = window
+
+	    return window
+	end
+}
+
+windows.apps.settingsWindow = {
+	name = "Settings",
+	currentWindow = nil,
+
+	check = function()
+		return true
+	end,
+
+	update = function()
+		if windows.apps.settingsWindow.currentWindow then
+			x = windows.apps.settingsWindow.currentWindow.x
+			y = windows.apps.settingsWindow.currentWindow.y
+
+			windows.apps.settingsWindow.currentWindow:remove()
+
+			app:addChild(windows.apps.settingsWindow.getWindow(x, y))
+		end
+	end,
+
+	getWindow = function(x, y)
+		local window = iTabbedWindow(x, y, 80, 30, "Settings")
+		local container = window:addChild(GUI.container(1, 5, window.width, window.height - 4))
+
+		window.tabBar:addItem("Logging").onTouch = function()
+			local logUrl = config["isProxyUrl"]
+			local enableLogging = config["isProxyEnabled"]
+
+			container:removeChildren()
+
+			container:addChild(GUI.label(2, 2, 8, 1, colors.textColor, "Logging feature is using InterstellarProxy. Please consult"))
+			container:addChild(GUI.label(2, 3, 8, 1, colors.textColor, "README.md if you don't know what it is."))
+
+			container:addChild(GUI.label(2, 5, 8, 1, colors.textColor, "Enable logging:"))
+			switch = container:addChild(GUI.switch(19, 5, 8, colors.mainColor, colors.button, colors.buttonPressed, enableLogging))
+
+			switch.onStateChanged = function()
+				enableLogging = switch.state
+			end
+
+			container:addChild(GUI.label(2, 7, 8, 1, colors.textColor, "InterstellarProxy URL:"))
+			container:addChild(iInput(2, 9, 25, 1, colors.inputBackground, colors.inputText, colors.inputPlaceholderText, colors.inputBackgroundFocused, colors.inputTextFocused, logUrl, "URL")).onInputFinished = function(_, input)
+				logUrl = input.text
+			end
+
+			container:addChild(GUI.button(window.width - 6, container.height - 1, 6, 1, colors.button, colors.buttonText, colors.buttonPressed, colors.buttonTextPressed, "Save")).onTouch = function()
+				config["isProxyUrl"] = logUrl
+				config["isProxyEnabled"] = enableLogging
+				saveParams()
+			end
+
+			app:draw()
+		end
+
+		window.tabBar:addItem("Ship").onTouch = function()
+			container:removeChildren()
+
+			if not wrapper.shipApiAvailable() then
+				container:addChild(GUI.label(2, 2, 8, 1, colors.textColor, "Ship is not available. Settings aren't too. Please, connect your ship."))
+				app:draw()
+				return
+			end
+
+		    local back, left, down = wrapper.ship.getDimNegative()
+    		local front, right, up = wrapper.ship.getDimPositive()
+    		local name = wrapper.ship.getShipName()
+
+			container:addChild(GUI.label(2, 3, 16, 1, colors.textColor, "Ship name:"))
+		    container:addChild(iInput(2, 5, 30, 1, colors.inputBackground, colors.inputText, colors.inputPlaceholderText, colors.inputBackgroundFocused, colors.inputTextFocused, name, "Имя корабля")).onInputFinished = function(container, input, eventData, text)
+		        name = input.text
+		    end    
+
+		    container:addChild(GUI.label(2, 7, 16, 1, colors.textColor, "Ship dimensions:"))
+		    container:addChild(GUI.label(2, 9, 16, 1, colors.textColor, "Front"))
+		    container:addChild(iIntInput(2, 10, 13, 1, colors.inputBackground, colors.inputText, colors.inputPlaceholderText, colors.inputBackgroundFocused, colors.inputTextFocused, front, "Кол-во блоков")).onInputFinished = function(_, input)
+		        front = tonumber(input.text)
+		    end
+
+		    container:addChild(GUI.label(2, 12, 16, 1, colors.textColor, "Back"))
+		    container:addChild(iIntInput(2, 13, 13, 1, colors.inputBackground, colors.inputText, colors.inputPlaceholderText, colors.inputBackgroundFocused, colors.inputTextFocused, back, "Кол-во блоков")).onInputFinished = function(_, input)
+		        back = tonumber(input.text)
+		    end  
+
+		    container:addChild(GUI.label(2, 15, 16, 1, colors.textColor, "Up"))
+		    container:addChild(iIntInput(2, 16, 13, 1, colors.inputBackground, colors.inputText, colors.inputPlaceholderText, colors.inputBackgroundFocused, colors.inputTextFocused, up, "Кол-во блоков")).onInputFinished = function(_, input)
+		        up = tonumber(input.text)
+		    end  
+
+		    container:addChild(GUI.label(20, 9, 16, 1, colors.textColor, "Down"))
+		    container:addChild(iIntInput(20, 10, 13, 1, colors.inputBackground, colors.inputText, colors.inputPlaceholderText, colors.inputBackgroundFocused, colors.inputTextFocused, down, "Кол-во блоков")).onInputFinished = function(_, input)
+		        down = tonumber(input.text)
+		    end  
+
+		    container:addChild(GUI.label(20, 12, 16, 1, colors.textColor, "Left"))
+		    container:addChild(iIntInput(20, 13, 13, 1, colors.inputBackground, colors.inputText, colors.inputPlaceholderText, colors.inputBackgroundFocused, colors.inputTextFocused, left, "Кол-во блоков")).onInputFinished = function(_, input)
+		        left = tonumber(input.text)
+		    end  
+
+		    container:addChild(GUI.label(20, 15, 16, 1, colors.textColor, "Right"))
+		    container:addChild(iIntInput(20, 16, 13, 1, colors.inputBackground, colors.inputText, colors.inputPlaceholderText, colors.inputBackgroundFocused, colors.inputTextFocused, right, "Кол-во блоков")).onInputFinished = function(_, input)
+		        right = tonumber(input.text)
+		    end
+
+			container:addChild(GUI.button(window.width - 6, container.height - 1, 6, 1, colors.button, colors.buttonText, colors.buttonPressed, colors.buttonTextPressed, "Save")).onTouch = function()
+				wrapper.ship.setShipName(name)
+				wrapper.ship.setDimNegative(back, left, down)
+				wrapper.ship.setDimPositive(front, right, up)
+			end
+			
+			app:draw()
+		end
+
+		window.tabBar:getItem(window.tabBar.selectedItem).onTouch()
+
+		windows.apps.settingsWindow.currentWindow = window
 
 	    return window
 	end
