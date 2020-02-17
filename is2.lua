@@ -336,6 +336,24 @@ windows.apps.jumpWindow = {
 		return true
 	end,
 
+	correct = function(x, y, z)
+		local oX, oZ = wrapper.ship.getOrientation()
+
+		local wx, wy, wz
+
+	    if oX == 1 then 
+	        wx, wy, wz = x, y, z
+	    elseif oX == -1 then
+	        wx, wy, wz = -x, y, -z
+	    elseif oZ == 1 then
+	        wx, wy, wz = -z, y, x
+	    elseif oZ == -1 then
+	        wx, wy, wz = z, y, -x
+	    end
+
+	    return wx, wy, wz
+	end,
+
 	update = function()
 		if windows.apps.jumpWindow.currentWindow then
 			x = windows.apps.jumpWindow.currentWindow.x
@@ -366,6 +384,8 @@ windows.apps.jumpWindow = {
 	    local jumpX, jumpY, jumpZ = wrapper.ship.getMovement()
 	    local rot = 0
 
+	    local autoCorrect = false
+
 	    if jumpX > maxX then jumpX = maxX elseif jumpX < -maxX then jumpX = -maxX end
 	    if jumpY > maxY then jumpY = maxY elseif jumpY < -maxY then jumpY = -maxY end
 	    if jumpZ > maxZ then jumpZ = maxZ elseif jumpZ < -maxZ then jumpZ = -maxZ end
@@ -395,10 +415,32 @@ windows.apps.jumpWindow = {
 	    	rot = num
 	    end
 
+		window:addChild(GUI.label(window.width - 24, 12, 8, 1, colors.textColor, "Auto correct:"))
+		switch = window:addChild(GUI.switch(window.width - 9, 12, 8, colors.mainColor, colors.button, colors.buttonPressed, autoCorrect))
+
+		switch.onStateChanged = function()
+			local oX, oZ = wrapper.ship.getOrientation()
+
+			if oX == 1 and oZ == 0 then
+				switch:setState(false)
+			end
+
+			autoCorrect = switch.state
+			app:draw()
+		end
+
 	    window:addChild(GUI.button(2, 17, 29, 3, colors.button, colors.buttonText, colors.buttonPressed, colors.buttonTextPressed, "Jump")).onTouch = function()
+	    	local cX, cY, cZ = jumpX, jumpY, jumpZ
+
+	    	if autoCorrect then
+    			cX, cY, cZ = windows.apps.jumpWindow.correct(cX, cY, cZ)
+    		end
+
 	    	wrapper.ship.jump(rot, jumpX, jumpY, jumpZ, false)
 
-	    	logJump(x, y, z, x + jumpX, y + jumpY, z + jumpZ, wrapper.ship.getShipName(), false)
+	    	local dX, dY, dZ = windows.apps.jumpWindow.correct(cX, cY, cZ)
+
+	    	logJump(x, y, z, x + DX, y + DY, z + DZ, wrapper.ship.getShipName(), false)
 	    end
 
 	    window:addChild(GUI.button(33, 17, 29, 3, colors.button, colors.buttonText, colors.buttonPressed, colors.buttonTextPressed, "Hyperspace jump")).onTouch = function()

@@ -235,7 +235,7 @@ end
 
 wrapper.ship.getOrientation = function() -- Returns X Z ship rotation
 	if wrapper.demoMode then
-		return 0, 1
+		return 1, 0
 	end
 
 	local x, _, z = wrapper.ship.getComponent().getOrientation()

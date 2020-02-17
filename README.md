@@ -1,9 +1,6 @@
 # Latest changelog
-* Added logging using InterstellarProxy which allows seding your ship jump/radar scan info to Discord.
-* Added ship setings allowing you to change the ship name and its dimensions.
-* Added ability to right click on a WarpRadar scan list entry to open up a context menu which allows you to set coordinates to a transporter.
-* Added "cancel" button to Jump Menu which cancels ship jump.
-* Minor bug fixes
+* Added "Auto correct" feature to Jump Menu. With this enabled, your movement coords will be corrected as if your ship had X: 1 Z: 0 orientation.
+* Fixed wrong destination coordinates in InterstellarProxy if your ship orientation is not X: 1 Z: 0.
 
 # Interstellar2
 Interstellar 2 is something like Desktop Environment created to control WarpDrive ships and other components with comfort.
