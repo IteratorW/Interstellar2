@@ -338,7 +338,6 @@ windows.apps.jumpWindow = {
 
 	correct = function(x, y, z)
 		local oX, oZ = wrapper.ship.getOrientation()
-
 		local wx, wy, wz
 
 	    if oX == 1 then 
@@ -352,6 +351,22 @@ windows.apps.jumpWindow = {
 	    end
 
 	    return wx, wy, wz
+	end,
+
+	worldMovToShip = function(x, y, z)
+	    local oX, oZ = wrapper.ship.getOrientation()
+	    local mx, my, mz
+
+	    if oX == 1 then 
+	        mx, my, mz = x, y, z
+	    elseif oX == -1 then
+	        mx,my,mz = -x, y, -z
+	    elseif oZ == 1 then
+	        mx,my,mz = z, y, -x
+	    elseif oZ == -1 then
+	        mx,my,mz = -z, y, x
+	    end
+	    return mx, my, mz
 	end,
 
 	update = function()
@@ -433,10 +448,10 @@ windows.apps.jumpWindow = {
 	    	local cX, cY, cZ = jumpX, jumpY, jumpZ
 
 	    	if autoCorrect then
-    			cX, cY, cZ = windows.apps.jumpWindow.correct(cX, cY, cZ)
+    			cX, cY, cZ = windows.apps.jumpWindow.worldMovToShip(cX, cY, cZ)
     		end
 
-	    	wrapper.ship.jump(rot, jumpX, jumpY, jumpZ, false)
+	    	wrapper.ship.jump(rot, cX, cY, cZ, false)
 
 	    	local dX, dY, dZ = windows.apps.jumpWindow.correct(cX, cY, cZ)
 
