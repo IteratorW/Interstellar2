@@ -16,20 +16,20 @@ local config = {
 }
 
 local colors = { 
-	mainColor = 0x0000AA,
-	desktopBackground = 0xC3C7CB,
+	mainColor = 0x00d4cd,
+	desktopBackground = 0x1c1c1c,
 
-    textColor = 0x000000,
+    textColor = 0xFFFFFF,
 
-    button = 0xC0C0C0,
-    buttonText = 0x000000,
-    buttonPressed = 0x8E8E8E,
-    buttonTextPressed = 0x000000,
+    button = 0x00aba5,
+    buttonText = 0xFFFFFF,
+    buttonPressed = 0x008580,
+    buttonTextPressed = 0xFFFFFF,
 
-    inputBackground = 0xC0C0C0,
+    inputBackground = 0x00aba5,
     inputText = 0x383838,
     inputPlaceholderText = 0xFFFFFF,
-    inputBackgroundFocused = 0xd1d1d1,
+    inputBackgroundFocused = 0x008580,
     inputTextFocused = 0x000000
 }
 
@@ -72,18 +72,41 @@ end
 
 -- Да-да, решил не юзать жусон либу.
 
-local function logJump(fromX, fromY, fromZ, toX, toY, toZ, name, hyper)
-	log(string.format('{"type": "jump", "name": "%s", "jump": [%s, %s, %s, %s, %s, %s, %s]}', name, fromX, fromY, fromZ, toX, toY, toZ, hyper))
+local function logJump(name, fromX, fromY, fromZ, toX, toY, toZ, rotSteps, by)
+	log(string.format('{"type": "jump", "name": "%s", "jump": [%s, %s, %s, %s, %s, %s], "rot": %s, "player": "%s"}', name, fromX, fromY, fromZ, toX, toY, toZ, rotSteps, by))
 end
 
-local function logRadar(results)
+local function logHyper(name, to, by)
+	log(string.format('{"type":"hyper", "name": "%s", "to": %s, "player": "%s"}', name, to, by))
+end
+
+local function logCancelJump(name, by)
+	log(string.format('{"type":"cancel_jump", "name": "%s", "player": "%s"}', name, by))
+end
+
+local function logPos()
+	local x, y, z = wrapper.ship.getPosition()
+	local oX, oZ = wrapper.ship.getOrientation()
+	local name = wrapper.ship.getShipName()
+	local mass = wrapper.ship.getShipMass()
+	local shipEnergy = wrapper.ship.getShipEnergy()
+	local maxEnergy = wrapper.ship.getMaxShipEnergy()
+	local energyPercents = math.floor((shipEnergy / maxEnergy) * 100)
+	local dim = wrapper.ship.getDimensionType()
+	if dim == 0 then dim = "Space" elseif dim == 1 then dim = "Hyperspace" else dim = "Unknown" end
+
+
+  	log(string.format('{"type": "pos", "pos": [%s, %s, %s], "o": [%s, %s], "name": "%s", "mass": %s, "energy": "%s", "dim": "%s"}', x, y, z, oX, oZ, name, mass, energyPercents, dim))
+end
+
+local function logRadar(results, name, by)
 	local out = '{"type": "radarScan", "results": ['
 
 	for i = 1, #results - 1 do
 		out = out .. string.format('"%s",', results[i])
 	end
 
-	out = out .. string.format('"%s"]}', results[#results])
+	out = out .. string.format('"%s"], "name": "%s", "player": "%s"}', results[#results], name, by) -- не знаю под че я это писал и чем меня не устроил join. Похуй пока.
 
 	log(out)
 end
@@ -135,8 +158,8 @@ end
 local function iActionButtons(x, y, width)
 	local container = GUI.container(x, y, width, 1)
 
-	container.close = container:addChild(GUI.button(1, 1, 1, 1, colors.button, colors.buttonText, colors.buttonPressed, colors.buttonTextPressed, "―"))
-	container.minimize = container:addChild(GUI.button(container.width, 1, 1, 1, colors.button, colors.buttonText, colors.buttonPressed, colors.buttonTextPressed, "▼"))
+	container.close = container:addChild(GUI.button(1, 1, 1, 1, colors.button, 0x0, colors.buttonPressed, 0x0, "―"))
+	container.minimize = container:addChild(GUI.button(container.width, 1, 1, 1, colors.button, 0x0, colors.buttonPressed, 0x0, "▼"))
 
 	return container
 end
@@ -146,9 +169,9 @@ local function iTitledWindow(x, y, width, height, title)
 
 	window.name = title
 
-	window.backgroundPanel = window:addChild(GUI.panel(1, 1, width, height, 0xFFFFFF))
+	window.backgroundPanel = window:addChild(GUI.panel(1, 1, width, height, 0x545454))
 	window.titlePanel = window:addChild(GUI.panel(1, 1, width, 1, colors.mainColor))
-	window.titleLabel = window:addChild(GUI.label(1, 1, width, height, 0xFFFFFF, title)):setAlignment(GUI.ALIGNMENT_HORIZONTAL_CENTER, GUI.ALIGNMENT_VERTICAL_TOP)
+	window.titleLabel = window:addChild(GUI.label(1, 1, width, height, 0x0, title)):setAlignment(GUI.ALIGNMENT_HORIZONTAL_CENTER, GUI.ALIGNMENT_VERTICAL_TOP)
 
 	window.actionButtons = window:addChild(iActionButtons(2, 2, width))
 	window.actionButtons.localX = 1
@@ -247,7 +270,7 @@ windows.debug = function(x, y)
 	local window = iTitledWindow(x, y, 30, 11, "Debug")
 
 	window.localY = 2
-	text = window:addChild(GUI.text(2, 2, 0x000000, "Minimized Windows: "..tostring(#windows.minimized)))
+	text = window:addChild(GUI.text(2, 2, colors.textColor, "Minimized Windows: "..tostring(#windows.minimized)))
 	window:addChild(GUI.adaptiveButton(2, 4, 3, 1, colors.button, colors.buttonText, colors.buttonPressed, colors.buttonTextPressed, "Reload")).onTouch = function()
 		text.text = "Minimized Windows: "..tostring(#windows.minimized)
 	end
@@ -302,7 +325,7 @@ windows.mainWindow = function(x, y)
 
 	count = 1
     for _, windowApp in pairs(windows.apps) do
-		window:addChild(GUI.framedButton(2 + 12 * count - 12, 3, 12, 6, 0x000000, 0x000000, 0xFAFAFA, 0xFAFAFA, windowApp.name)).onTouch = function()
+		window:addChild(GUI.framedButton(2 + 12 * count - 12, 3, 12, 6, colors.buttonText, colors.buttonText, 0xFAFAFA, 0xFAFAFA, windowApp.name)).onTouch = function()
 	    	if windowApp.check() then
 				app:addChild(windowApp.getWindow(10, 10))
 			end
@@ -444,7 +467,7 @@ windows.apps.jumpWindow = {
 			app:draw()
 		end
 
-	    window:addChild(GUI.button(2, 17, 29, 3, colors.button, colors.buttonText, colors.buttonPressed, colors.buttonTextPressed, "Jump")).onTouch = function()
+	    window:addChild(GUI.button(2, 17, 29, 3, colors.button, colors.buttonText, colors.buttonPressed, colors.buttonTextPressed, "Jump")).onTouch = function(_, _, _, _, _, _, _, by)
 	    	local cX, cY, cZ = jumpX, jumpY, jumpZ
 
 	    	if autoCorrect then
@@ -455,21 +478,25 @@ windows.apps.jumpWindow = {
 
 	    	local dX, dY, dZ = windows.apps.jumpWindow.correct(cX, cY, cZ)
 
-	    	logJump(x, y, z, x + dX, y + dY, z + dZ, wrapper.ship.getShipName(), false)
+	    	local oX, oZ = wrapper.ship.getOrientation()
+
+	    	logJump(wrapper.ship.getShipName(), x, y, z, x + dX, y + dY, z + dZ, rot, by)
 	    end
 
-	    window:addChild(GUI.button(33, 17, 29, 3, colors.button, colors.buttonText, colors.buttonPressed, colors.buttonTextPressed, "Hyperspace jump")).onTouch = function()
+	    window:addChild(GUI.button(33, 17, 29, 3, colors.button, colors.buttonText, colors.buttonPressed, colors.buttonTextPressed, "Hyperspace jump")).onTouch = function(_, _, _, _, _, _, _, by)
 	    	wrapper.ship.jump(nil, nil, nil, nil, true)
 
-	    	logJump(0, 0, 0, 0, 0 , 0, wrapper.ship.getShipName(), true)
+	    	logHyper(wrapper.ship.getShipName(), wrapper.ship.getDimensionType() ~= 1, by)
 	    end
 
 		window:addChild(GUI.button(window.width - 9, 3, 9, 1, colors.button, colors.buttonText, colors.buttonPressed, colors.buttonTextPressed, "Refresh")).onTouch = function()
 	    	windows.apps.jumpWindow.update()
 	    end
 
-	    window:addChild(GUI.button(window.width - 13, 5, 13, 1, colors.button, colors.buttonText, colors.buttonPressed, colors.buttonTextPressed, "Cancel jump")).onTouch = function()
+	    window:addChild(GUI.button(window.width - 13, 5, 13, 1, colors.button, colors.buttonText, colors.buttonPressed, colors.buttonTextPressed, "Cancel jump")).onTouch = function(_, _, _, _, _, _, _, by)
 	    	wrapper.ship.cancelJump()
+
+	    	logCancelJump(wrapper.ship.getShipName(), by)
 	    end
 
     	windows.apps.jumpWindow.currentWindow = window
@@ -578,6 +605,8 @@ windows.apps.radarWindow = {
 
 		local radarRadius = 1
 
+		local scannedBy = ""
+
 		local energyPercents = math.floor((wrapper.radar.getRadarEnergy() / wrapper.radar.getMaxRadarEnergy()) * 100 + 0.5)
 		window:addChild(GUI.button(window.width - 10, 3, 9, 1, colors.button, colors.buttonText, colors.buttonPressed, colors.buttonTextPressed, "Refresh")).onTouch = function()
 	    	windows.apps.radarWindow.update()
@@ -616,7 +645,7 @@ windows.apps.radarWindow = {
 		local list = window:addChild(GUI.list(2, 11, 55, 29, 0, 0, colors.button, colors.textColor, colors.buttonPressed, colors.textColor, colors.button, colors.textColor, colors.textColor, false))
 		list.children = windows.apps.radarWindow.lastTextBox
 
-		window:addChild(GUI.button(window.width - 7, 9, 6, 1, colors.button, colors.buttonText, colors.buttonPressed, colors.buttonTextPressed, "Scan")).onTouch = function()
+		window:addChild(GUI.button(window.width - 7, 9, 6, 1, colors.button, colors.buttonText, colors.buttonPressed, colors.buttonTextPressed, "Scan")).onTouch = function(_, _, _, _, _, _, _, by)
 			if wrapper.radar.getRadarEnergy() < wrapper.radar.getRequiredEnergy(radarRadius) then
 				GUI.alert("Not enough energy for this scan!")
 				return
@@ -626,6 +655,7 @@ windows.apps.radarWindow = {
 
 	    	wrapper.radar.scan(radarRadius)
 	    	windows.apps.radarWindow.scanInProcess = true
+	    	windows.apps.radarWindow.scannedBy = by
 	    end
 
 	    local obj = app:addChild(GUI.object(0, 0, 1, 1))
@@ -662,7 +692,7 @@ windows.apps.radarWindow = {
 				table.insert(logOutput, v.text)
 			end
 
-			logRadar(logOutput)
+			logRadar(logOutput, wrapper.ship.getShipName(), windows.apps.radarWindow.scannedBy)
 
 			app:draw()
 		end	
@@ -781,6 +811,10 @@ windows.apps.settingsWindow = {
 				saveParams()
 			end
 
+			container:addChild(GUI.button(window.width - 26, container.height - 1, 19, 1, colors.button, colors.buttonText, colors.buttonPressed, colors.buttonTextPressed, "Send test request")).onTouch = function()
+				logPos()
+			end
+
 			app:draw()
 		end
 
@@ -859,6 +893,8 @@ if gpu.getDepth() < 4 and (maxRes[1] < 80 and maxRes[2] < 25) then
 end
 
 loadParams()
+
+logPos()
 
 local res = {}
 res[1], res[2] = gpu.getResolution()
