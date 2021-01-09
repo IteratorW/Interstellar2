@@ -480,7 +480,7 @@ windows.apps.jumpWindow = {
 
             local fromX, fromY, fromZ = wrapper.ship.getPosition()
  
-            logJump(wrapper.ship.getShipName(), fromX, fromY, fromZ, x + dX, y + dY, z + dZ, rot, by)
+            logJump(wrapper.ship.getShipName(), fromX, fromY, fromZ, fromX + dX, fromY + dY, fromZ + dZ, rot, by)
         end
  
         window:addChild(GUI.button(33, 17, 29, 3, colors.button, colors.buttonText, colors.buttonPressed, colors.buttonTextPressed, "Hyperspace jump")).onTouch = function(_, _, _, _, _, _, _, by)
